@@ -27,6 +27,13 @@ def get_drive_service():
         else:
             flow = InstalledAppFlow.from_client_secrets_file(
                 CREDENTIALS_FILE, SCOPES)
+            
+            # --- SSLエラー対策: 証明書検証を無効化 ---
+            import urllib3
+            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+            flow.oauth2session.verify = False
+            # ---------------------------------------
+            
             creds = flow.run_local_server(port=0)
         with open(TOKEN_FILE, 'wb') as token:
             pickle.dump(creds, token)
