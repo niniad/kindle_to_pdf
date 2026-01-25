@@ -5,6 +5,7 @@ from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 from googleapiclient.http import MediaFileUpload
+import urllib3
 
 # --- 設定 ---
 SCOPES = ['https://www.googleapis.com/auth/drive']
@@ -21,19 +22,16 @@ def get_drive_service():
         with open(TOKEN_FILE, 'rb') as token:
             creds = pickle.load(token)
     
+    # SSLエラー対策: 証明書検証を無効化
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
         else:
             flow = InstalledAppFlow.from_client_secrets_file(
                 CREDENTIALS_FILE, SCOPES)
-            
-            # --- SSLエラー対策: 証明書検証を無効化 ---
-            import urllib3
-            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
             flow.oauth2session.verify = False
-            # ---------------------------------------
-            
             creds = flow.run_local_server(port=0)
         with open(TOKEN_FILE, 'wb') as token:
             pickle.dump(creds, token)
@@ -112,12 +110,23 @@ def main():
             # 2. テキスト抽出
             text = get_text_from_doc(service, doc_id)
             
-            # 3. Markdown書き込み
-            page_num = i + 1
-            f.write(f"## Page {page_num}\n\n")
-            f.write(f"![Page {page_num}]({IMAGE_DIR}/{image_name})\n\n")
-            f.write(f"{text}\n\n")
-            f.write("---\n\n")
+            # 3. 書き込み (ページ番号などのゴミ除去)
+            lines = text.split('\n')
+            cleaned_lines = []
+            for line in lines:
+                stripped = line.strip()
+                # ページ番号や画像のゴミを除去
+                if stripped.startswith("Page ") and len(stripped) < 10:
+                    continue
+                if stripped == "________________":
+                    continue
+                if not stripped: # 空行はそのまま保持するか、調整する
+                    cleaned_lines.append("")
+                    continue
+                cleaned_lines.append(line)
+            
+            f.write("\n".join(cleaned_lines))
+            f.write("\n\n") # ページ間の区切り
             
             # 4. クリーンアップ
             delete_file(service, doc_id)
