@@ -1,5 +1,7 @@
+customtkinter
 pyautogui
+mss
+img2pdf
+opencv-python
+pywin32
 Pillow
-google-api-python-client
-google-auth-oauthlib
-google-auth-httplib2
