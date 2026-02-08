@@ -52,11 +52,25 @@ class CaptureEngine:
         #  If Vertical (Right to Left binding), Next Page is Left Arrow.
         #  If Horizontal (Left to Right binding), Next Page is Right Arrow.
         
-        key_to_press = 'right'
-        if direction == 'left' or 'Left' in direction or '縦' in str(direction):
-             key_to_press = 'left'
-        else:
+        
+        # Determine key to press based on direction selection
+        # "左へ" (Left) usually means [Left Arrow] is Next Page (Vertical writing)
+        # "右へ" (Right) usually means [Right Arrow] is Next Page (Horizontal writing)
+        key_to_press = 'left' 
+        if "右" in direction or "Right" in direction:
              key_to_press = 'right'
+        
+        # Safety click to ensure focus on the application
+        # Click the center of the region once at the start
+        if self.region:
+             center_x = self.region['left'] + self.region['width'] // 2
+             center_y = self.region['top'] + self.region['height'] // 2
+             
+             # Safety click to ensure focus on the application
+             # Click the center of the region once at the start to focus window
+             print(f"Clicking at {center_x}, {center_y} to focus window...")
+             pyautogui.click(center_x, center_y)
+             time.sleep(0.5)
 
         print(f"Starting capture loop. Key: {key_to_press}, Region: {self.region}")
 
@@ -64,7 +78,7 @@ class CaptureEngine:
             page_count = 1
             while not self.stop_event.is_set():
                 if not self.region:
-                    if callback_status: callback_status("Error: Region not set", 0)
+                    if callback_status: callback_status("エラー: 範囲が設定されていません", 0)
                     break
 
                 # 1. Capture
@@ -80,13 +94,8 @@ class CaptureEngine:
                 # 2. Compare with previous
                 is_duplicate = False
                 if self.last_image_data is not None:
-                    # Resize to match just in case, though region matches
-                    # Compare
                     diff = cv2.absdiff(self.last_image_data, img_bgr)
                     non_zero_count = np.count_nonzero(diff)
-                    
-                    # Threshold for similarity (allow small noise)
-                    # Total pixels * channels
                     total_pixels = img_bgr.size
                     similarity = 1 - (non_zero_count / total_pixels)
                     
@@ -99,20 +108,25 @@ class CaptureEngine:
 
                 # 3. Save or Stop
                 if consecutive_duplicates >= duplicate_limit:
-                    if callback_status: callback_status("Finished (End of book detected)", len(self.saved_files))
+                    if callback_status: callback_status("完了 (最終ページ到達)", len(self.saved_files))
                     break
                 
                 if not is_duplicate:
+                    # Retry checking duplicate to avoid fast loading spinners? No, simple logic for now.
                     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
                     filename = os.path.join(self.output_dir, f"page_{page_count:04d}_{timestamp}.png")
                     mss.tools.to_png(sct_img.rgb, sct_img.size, output=filename)
                     self.saved_files.append(filename)
                     self.last_image_data = img_bgr
-                    if callback_status: callback_status(f"Captured Page {page_count}", len(self.saved_files))
+                    if callback_status: callback_status(f"キャプチャ済み: {page_count} ページ", len(self.saved_files))
                     page_count += 1
                 
-                # 4. Turn Page
-                pyautogui.press(key_to_press)
+                # 4. Turn Page (More robust key press)
+                # Ensure focus? Maybe not every time.
+                print(f"Pressing {key_to_press}...")
+                pyautogui.keyDown(key_to_press)
+                time.sleep(0.1) # Hold key for 100ms
+                pyautogui.keyUp(key_to_press)
                 
                 # 5. Wait
                 time.sleep(float(wait_time))

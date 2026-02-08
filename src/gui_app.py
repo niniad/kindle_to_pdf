@@ -13,6 +13,8 @@ class SnippingTool(tk.Toplevel):
         super().__init__(parent)
         self.callback = callback
         self.aspect_ratio = aspect_ratio # height / width, e.g. 1.414 for A4
+        self.font_main = ("Meiryo UI", 12)
+
         
         self.attributes('-fullscreen', True)
         self.attributes('-alpha', 0.3)
@@ -82,8 +84,15 @@ class App(ctk.CTk):
     def __init__(self):
         super().__init__()
 
-        self.title("Kindle Capture to NotebookLM")
-        self.geometry("400x650")
+        self.title("Kindleキャプチャ to NotebookLM")
+        self.geometry("450x650")
+        
+        # フォント設定（日本語対応）
+        self.font_title = ("Meiryo UI", 14, "bold")
+        self.font_label = ("Meiryo UI", 12)
+        self.font_entry = ("Meiryo UI", 12)
+        self.font_button = ("Meiryo UI", 12, "bold")
+
 
         self.capture_engine = CaptureEngine()
         self.pdf_generator = PDFGenerator()
@@ -95,12 +104,12 @@ class App(ctk.CTk):
         self.frame_inputs = ctk.CTkFrame(self)
         self.frame_inputs.pack(pady=10, padx=10, fill="x")
 
-        ctk.CTkLabel(self.frame_inputs, text="Book Title:").pack(anchor="w", padx=5)
-        self.entry_title = ctk.CTkEntry(self.frame_inputs)
+        ctk.CTkLabel(self.frame_inputs, text="本のタイトル:", font=self.font_label).pack(anchor="w", padx=5)
+        self.entry_title = ctk.CTkEntry(self.frame_inputs, font=self.font_entry)
         self.entry_title.pack(fill="x", padx=5, pady=(0, 10))
 
-        ctk.CTkLabel(self.frame_inputs, text="Author (Optional):").pack(anchor="w", padx=5)
-        self.entry_author = ctk.CTkEntry(self.frame_inputs)
+        ctk.CTkLabel(self.frame_inputs, text="著者 (任意):", font=self.font_label).pack(anchor="w", padx=5)
+        self.entry_author = ctk.CTkEntry(self.frame_inputs, font=self.font_entry)
         self.entry_author.pack(fill="x", padx=5, pady=(0, 10))
         
         # 2. Settings
@@ -108,22 +117,27 @@ class App(ctk.CTk):
         self.frame_settings.pack(pady=5, padx=10, fill="x")
 
         # Direction
-        ctk.CTkLabel(self.frame_settings, text="Page Direction:").pack(anchor="w", padx=5)
-        self.var_direction = ctk.StringVar(value="Right -> Left (Vertical)")
+        # Direction
+        ctk.CTkLabel(self.frame_settings, text="ページめくり方向:", font=self.font_label).pack(anchor="w", padx=5)
+        self.var_direction = ctk.StringVar(value="左へ (縦書き/右綴じ)")
         self.opt_direction = ctk.CTkOptionMenu(self.frame_settings, variable=self.var_direction, 
-                                               values=["Right -> Left (Vertical)", "Left -> Right (Horizontal)"])
+                                               values=["左へ (縦書き/右綴じ)", "右へ (横書き/左綴じ)"],
+                                               font=self.font_entry)
         self.opt_direction.pack(fill="x", padx=5, pady=(0, 10))
         
         # Aspect Ratio
-        ctk.CTkLabel(self.frame_settings, text="Capture Aspect Ratio:").pack(anchor="w", padx=5)
-        self.var_aspect = ctk.StringVar(value="Free Select")
+        # Aspect Ratio
+        ctk.CTkLabel(self.frame_settings, text="キャプチャ範囲の比率:", font=self.font_label).pack(anchor="w", padx=5)
+        self.var_aspect = ctk.StringVar(value="自由選択")
         self.opt_aspect = ctk.CTkOptionMenu(self.frame_settings, variable=self.var_aspect,
-                                            values=["Free Select", "A4/A5/B6 (1:1.41)", "Kindle PW (3:4)"])
+                                            values=["自由選択", "A4/A5/B6 (1:1.41)", "Kindle PW (3:4)"],
+                                            font=self.font_entry)
         self.opt_aspect.pack(fill="x", padx=5, pady=(0, 10))
 
         # Wait Time
-        ctk.CTkLabel(self.frame_settings, text="Wait Time (ms):").pack(anchor="w", padx=5)
-        self.entry_wait = ctk.CTkEntry(self.frame_settings)
+        # Wait Time
+        ctk.CTkLabel(self.frame_settings, text="待機時間 (ミリ秒):", font=self.font_label).pack(anchor="w", padx=5)
+        self.entry_wait = ctk.CTkEntry(self.frame_settings, font=self.font_entry)
         self.entry_wait.insert(0, "1500")
         self.entry_wait.pack(fill="x", padx=5, pady=(0, 10))
 
@@ -131,23 +145,26 @@ class App(ctk.CTk):
         self.frame_actions = ctk.CTkFrame(self)
         self.frame_actions.pack(pady=10, padx=10, fill="x")
 
-        self.btn_region = ctk.CTkButton(self.frame_actions, text="Select Capture Region", command=self.select_region, fg_color="#E0aaff", text_color="black")
+        self.btn_region = ctk.CTkButton(self.frame_actions, text="キャプチャ範囲を選択", command=self.select_region, fg_color="#E0aaff", text_color="black", font=self.font_button)
         self.btn_region.pack(fill="x", padx=5, pady=5)
         
-        self.lbl_region_status = ctk.CTkLabel(self.frame_actions, text="Region: Not Set", text_color="gray")
+        self.lbl_region_status = ctk.CTkLabel(self.frame_actions, text="範囲: 未設定", text_color="gray", font=self.font_label)
         self.lbl_region_status.pack()
 
-        self.btn_start = ctk.CTkButton(self.frame_actions, text="Start Auto Capture (5s Delay)", command=self.start_capture_flow, fg_color="#36D399", text_color="black")
+        self.btn_start = ctk.CTkButton(self.frame_actions, text="自動キャプチャ開始 (5秒後)", command=self.start_capture_flow, fg_color="#36D399", text_color="black", font=self.font_button)
         self.btn_start.pack(fill="x", padx=5, pady=10)
 
-        self.btn_stop = ctk.CTkButton(self.frame_actions, text="Stop", command=self.stop_capture, fg_color="#F87272", text_color="black", state="disabled")
+        self.btn_stop = ctk.CTkButton(self.frame_actions, text="停止", command=self.stop_capture, fg_color="#F87272", text_color="black", state="disabled", font=self.font_button)
         self.btn_stop.pack(fill="x", padx=5, pady=5)
         
-        self.btn_pdf = ctk.CTkButton(self.frame_actions, text="Generate PDF", command=self.generate_pdf, fg_color="#3ABFF8", text_color="black", state="disabled")
+        self.btn_pdf = ctk.CTkButton(self.frame_actions, text="PDF生成", command=self.generate_pdf, fg_color="#3ABFF8", text_color="black", state="disabled", font=self.font_button)
         self.btn_pdf.pack(fill="x", padx=5, pady=10)
 
+        self.btn_clear = ctk.CTkButton(self.frame_actions, text="保存済画像全消去", command=self.clear_images, fg_color="#FB70A9", text_color="black", font=self.font_button)
+        self.btn_clear.pack(fill="x", padx=5, pady=5)
+
         # 4. Logs
-        self.lbl_status = ctk.CTkLabel(self, text="Ready", wraplength=380)
+        self.lbl_status = ctk.CTkLabel(self, text="準備完了", wraplength=430, font=self.font_label)
         self.lbl_status.pack(pady=10)
 
     def select_region(self):
@@ -162,14 +179,14 @@ class App(ctk.CTk):
     def _on_region_selected(self, x, y, w, h):
         self.deiconify() # Show main
         self.capture_engine.set_region(x, y, w, h)
-        self.lbl_region_status.configure(text=f"Region: x={x}, y={y}, {w}x{h}")
+        self.lbl_region_status.configure(text=f"範囲: x={x}, y={y}, {w}x{h}")
 
     def start_capture_flow(self):
         if not self.entry_title.get():
-            self.lbl_status.configure(text="Error: Title is required!")
+            self.lbl_status.configure(text="エラー: タイトルを入力してください！")
             return
         if not self.capture_engine.region:
-            self.lbl_status.configure(text="Error: Select Region first!")
+            self.lbl_status.configure(text="エラー: 先にキャプチャ範囲を選択してください！")
             return
 
         self.btn_start.configure(state="disabled")
@@ -182,10 +199,10 @@ class App(ctk.CTk):
 
     def _countdown_and_start(self):
         for i in range(5, 0, -1):
-            self.lbl_status.configure(text=f"Starting in {i} seconds... Focus Kindle NOW!")
+            self.lbl_status.configure(text=f"{i} 秒後に開始します... Kindleウィンドウをアクティブにしてください！")
             time.sleep(1)
             
-        self.lbl_status.configure(text="Capturing... (Do not move mouse over region)")
+        self.lbl_status.configure(text="キャプチャ中... (マウスを動かさないでください)")
         
         # Parse settings
         direction = self.var_direction.get()
@@ -219,12 +236,12 @@ class App(ctk.CTk):
         saved = len(self.capture_engine.saved_files)
         if saved > 0:
             self.btn_pdf.configure(state="normal")
-            self.lbl_status.configure(text=f"Capture Finished. {saved} pages ready to PDF.")
+            self.lbl_status.configure(text=f"キャプチャ完了。 {saved} ページ保存されました。PDF生成可能です。")
         else:
-            self.lbl_status.configure(text="Capture Finished. No pages saved.")
+            self.lbl_status.configure(text="キャプチャ終了。 保存されたページはありません。")
 
     def generate_pdf(self):
-        self.lbl_status.configure(text="Generating PDF...")
+        self.lbl_status.configure(text="PDF生成中...")
         threading.Thread(target=self._generate_pdf_worker).start()
 
     def _generate_pdf_worker(self):
@@ -234,9 +251,29 @@ class App(ctk.CTk):
         
         pdfs = self.pdf_generator.generate(files, title, author)
         
-        msg = f"Generated {len(pdfs)} PDF(s) in output_pdfs/"
+        msg = f"PDF生成完了: {len(pdfs)} 件作成しました (output_pdfs/)"
         self.lbl_status.configure(text=msg)
         print(msg)
+
+    def clear_images(self):
+        # Confirm dialogue? Tkinter messagebox?
+        # For simplicity, just delete and show status.
+        import os
+        import glob
+        
+        files = glob.glob(os.path.join(self.capture_engine.output_dir, "*"))
+        count = 0
+        for f in files:
+            try:
+                os.remove(f)
+                count += 1
+            except Exception as e:
+                print(f"Error deleting {f}: {e}")
+        
+        self.capture_engine.saved_files = [] 
+        self.lbl_status.configure(text=f"画像を削除しました ({count} ファイル)")
+        self.btn_pdf.configure(state="disabled")
+
 
 if __name__ == "__main__":
     app = App()
