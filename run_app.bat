@@ -2,8 +2,9 @@
 setlocal
 
 cd /d "%~dp0"
+chcp 65001
 
-echo [1/3] 環境を確認中...
+echo [1/3] Checking Environment...
 set PYTHON_EXE=python
 where python >nul 2>&1
 if %errorlevel% neq 0 (

@@ -88,10 +88,11 @@ class App(ctk.CTk):
         self.geometry("450x650")
         
         # フォント設定（日本語対応）
-        self.font_title = ("Meiryo UI", 14, "bold")
-        self.font_label = ("Meiryo UI", 12)
-        self.font_entry = ("Meiryo UI", 12)
-        self.font_button = ("Meiryo UI", 12, "bold")
+        # 'Meiryo UI' が一部環境で効かない場合があるため 'MS PDF Gothic' や 'Yu Gothic UI' を試す
+        self.font_title = ("Yu Gothic UI", 14, "bold")
+        self.font_label = ("Yu Gothic UI", 12)
+        self.font_entry = ("Yu Gothic UI", 12)
+        self.font_button = ("Yu Gothic UI", 12, "bold")
 
 
         self.capture_engine = CaptureEngine()
@@ -118,10 +119,11 @@ class App(ctk.CTk):
 
         # Direction
         # Direction
-        ctk.CTkLabel(self.frame_settings, text="ページめくり方向:", font=self.font_label).pack(anchor="w", padx=5)
-        self.var_direction = ctk.StringVar(value="左へ (縦書き/右綴じ)")
+        # Direction
+        ctk.CTkLabel(self.frame_settings, text="ページめくり設定:", font=self.font_label).pack(anchor="w", padx=5)
+        self.var_direction = ctk.StringVar(value="左キー (縦書き本)")
         self.opt_direction = ctk.CTkOptionMenu(self.frame_settings, variable=self.var_direction, 
-                                               values=["左へ (縦書き/右綴じ)", "右へ (横書き/左綴じ)"],
+                                               values=["左キー (縦書き本)", "右キー (横書き本)", "PageDown (汎用)"],
                                                font=self.font_entry)
         self.opt_direction.pack(fill="x", padx=5, pady=(0, 10))
         
@@ -138,7 +140,7 @@ class App(ctk.CTk):
         # Wait Time
         ctk.CTkLabel(self.frame_settings, text="待機時間 (ミリ秒):", font=self.font_label).pack(anchor="w", padx=5)
         self.entry_wait = ctk.CTkEntry(self.frame_settings, font=self.font_entry)
-        self.entry_wait.insert(0, "1500")
+        self.entry_wait.insert(0, "500")
         self.entry_wait.pack(fill="x", padx=5, pady=(0, 10))
 
         # 3. Actions

@@ -54,14 +54,14 @@ class CaptureEngine:
         
         
         # Determine key to press based on direction selection
-        # "左へ" (Left) usually means [Left Arrow] is Next Page (Vertical writing)
-        # "右へ" (Right) usually means [Right Arrow] is Next Page (Horizontal writing)
-        key_to_press = 'left' 
-        if "右" in direction or "Right" in direction:
+        key_to_press = 'left'
+        
+        if "右" in direction:
              key_to_press = 'right'
+        elif "PageDown" in direction:
+             key_to_press = 'pagedown'
         
         # Safety click to ensure focus on the application
-        # Click the center of the region once at the start
         if self.region:
              center_x = self.region['left'] + self.region['width'] // 2
              center_y = self.region['top'] + self.region['height'] // 2
